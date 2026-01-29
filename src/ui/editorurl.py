@@ -151,7 +151,8 @@ class EditorUrl(EditorInterface):
             if command.command:
                 subprocess.Popen([command.command, url])
             else:
-                subprocess.Popen([url])
+                urlparts=url.split()
+                subprocess.Popen(urlparts)
         else:
             dialog = Gtk.MessageDialog(
                 transient_for=ui.app_window,
