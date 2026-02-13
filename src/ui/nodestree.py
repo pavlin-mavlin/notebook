@@ -1,319 +1,282 @@
-import gi
-
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GdkPixbuf
+import tkinter as tk
+from tkinter import ttk
 from models.node import Node,NodeType
 import ui
 from controllers.nodecontroller import NodeController
+from ui.entrypopup import EntryPopup
 
-class NodesTree(Gtk.Box):        
+class NodesTree(tk.Frame):        
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        toolbar=Gtk.Toolbar()
-        toolbar.set_border_width(5)
+        
+        self.cut_item_id=None        
+        
+        toolbar = tk.Frame(self, borderwidth = 1, relief=tk.RAISED)    
+            
+        self.image_folder_add = tk.PhotoImage(file="images/folder-add.png") # self нужно, хотя не используется        
+        self.button_folder = tk.Button(toolbar, image=self.image_folder_add, state=tk.DISABLED,width=34,command=self.on_folder_add) #relief=tk.FLAT, 
+        self.button_folder.pack(side=tk.LEFT, padx=2, pady=5)
+        
+        self.image_memo_add=tk.PhotoImage(file="images/memo-add.png")
+        self.button_memo=tk.Button(toolbar, image=self.image_memo_add, state=tk.DISABLED,width=34,command=self.on_memo_add)
+        self.button_memo.pack(side=tk.LEFT, padx=2, pady=5)
+        
+        self.image_password_add=tk.PhotoImage(file="images/password-add.png")
+        self.button_password=tk.Button(toolbar, image=self.image_password_add, state=tk.DISABLED,width=34,command=self.on_password_add)
+        self.button_password.pack(side=tk.LEFT, padx=2, pady=5)
                 
-        # здесь примеры стандартных иконок https://www.tutorialspoint.com/pygtk/pygtk_toolbar_class.htm
-        
-        image_folder=ui.get_scaled_image("folder-add.svg")
-        self.button_folder=Gtk.ToolButton(icon_widget=image_folder,sensitive=False)  
-        self.button_folder.connect("clicked",self.on_button_folder_clicked)     
-        toolbar.add(self.button_folder)
-        
-        image_memo=ui.get_scaled_image("memo-add.svg")
-        self.button_memo=Gtk.ToolButton(icon_widget=image_memo,sensitive=False)
-        self.button_memo.connect("clicked",self.on_button_memo_clicked)
-        toolbar.add(self.button_memo)
-        
-        image_password=ui.get_scaled_image("password-add.svg")
-        self.button_password=Gtk.ToolButton(icon_widget=image_password,sensitive=False)
-        self.button_password.connect("clicked",self.on_button_password_clicked)
-        toolbar.add(self.button_password)
-                
-        image_url=ui.get_scaled_image("link-add.svg")
-        self.button_url=Gtk.ToolButton(icon_widget=image_url,sensitive=False)
-        self.button_url.connect("clicked",self.on_button_url_clicked)
-        toolbar.add(self.button_url)
+        self.image_url_add=tk.PhotoImage(file="images/link-add.png")
+        self.button_url=tk.Button(toolbar, image=self.image_url_add,  state=tk.DISABLED,width=34,command=self.on_url_add)
+        self.button_url.pack(side=tk.LEFT, padx=2, pady=5)
 
-        image_delete=ui.get_scaled_image("274c.svg")
-        self.button_delete=Gtk.ToolButton(icon_widget=image_delete,sensitive=False)
-        self.button_delete.connect("clicked",self.on_button_delete_clicked)
-        toolbar.add(self.button_delete)
+        self.image_delete=tk.PhotoImage(file="images/274c.png")
+        self.button_delete=tk.Button(toolbar, image=self.image_delete,  state=tk.DISABLED,width=34,command=self.on_delete)
+        self.button_delete.pack(side=tk.LEFT, padx=2, pady=5)
         
-        image_up=ui.get_scaled_image("2b06.svg")
-        self.button_up=Gtk.ToolButton(icon_widget=image_up,sensitive=False)
-        self.button_up.connect("clicked",self.on_button_up_clicked)
-        toolbar.add(self.button_up)
+        self.image_up=tk.PhotoImage(file="images/2b06.png")
+        self.button_up=tk.Button(toolbar, image=self.image_up,  state=tk.DISABLED,width=34,command=self.on_item_up)
+        self.button_up.pack(side=tk.LEFT, padx=2, pady=5)
         
-        image_down=ui.get_scaled_image("2b07.svg")
-        self.button_down=Gtk.ToolButton(icon_widget=image_down,sensitive=False)
-        self.button_down.connect("clicked",self.on_button_down_clicked)
-        toolbar.add(self.button_down)
+        self.image_down=tk.PhotoImage(file="images/2b07.png")
+        self.button_down=tk.Button(toolbar, image=self.image_down,  state=tk.DISABLED,width=34,command=self.on_item_down)
+        self.button_down.pack(side=tk.LEFT, padx=2, pady=5)
         
-        image_cut=ui.get_scaled_image("2702-rot.svg")
-        self.button_cut=Gtk.ToolButton(icon_widget=image_cut,sensitive=False)
-        self.button_cut.connect("clicked",self.on_button_cut_clicked)
-        toolbar.add(self.button_cut)
+        self.image_cut=tk.PhotoImage(file="images/2702-rot.png")
+        self.button_cut=tk.Button(toolbar, image=self.image_cut, width=34, state=tk.DISABLED,command=self.on_cut)
+        self.button_cut.pack(side=tk.LEFT, padx=2, pady=5)
         
-        image_paste=ui.get_scaled_image("1f4cb.svg")
-        self.button_paste=Gtk.ToolButton(icon_widget=image_paste,sensitive=False)
-        self.button_paste.connect("clicked",self.on_button_paste_clicked)
-        toolbar.add(self.button_paste)
-        
-        self.cut_path=None
-        
-        self.set_homogeneous(False)
-        self.pack_start(toolbar,False,False,0)
-                        
-        self.folder_pixbuf=ui.get_scaled_pixbuf("1f4c1.svg")
-        self.memo_pixbuf=ui.get_scaled_pixbuf("1f4dd.svg")
-        self.password_pixbuf=ui.get_scaled_pixbuf("1f511.svg")
-        self.url_pixbuf=ui.get_scaled_pixbuf("1f517.svg")
+        self.image_paste=tk.PhotoImage(file="images/1f4cb.png")
+        self.button_paste=tk.Button(toolbar, image=self.image_paste, width=34, state=tk.DISABLED,command=self.on_paste)
+        self.button_paste.pack(side=tk.LEFT, padx=2, pady=5)
                 
-        store = Gtk.TreeStore(str,int,GdkPixbuf.Pixbuf,int,int)            
+        toolbar.pack(side=tk.TOP, fill=tk.X)
         
-        expanded_paths=[]
-        self.populate_tree(store,expanded_paths)        
+        #self.image_folder=tk.PhotoImage(file="images/1f4c1.png")
+        #self.image_memo=tk.PhotoImage(file="images/1f4dd.png")
+        #self.image_password=tk.PhotoImage(file="images/1f511.png")
+        #self.image_url=tk.PhotoImage(file="images/1f517.png")        
         
-        self.tree = Gtk.TreeView(model=store,enable_tree_lines=True)
-        self.tree.set_headers_visible(False)
-        
-        self.column = Gtk.TreeViewColumn("Structure")
-        
-        self.col_cell_text = Gtk.CellRendererText()
-        self.col_cell_text.set_property("editable", True)
-        self.col_cell_text.connect("edited",self.on_tree_edited)
-        col_cell_img = Gtk.CellRendererPixbuf()
-        self.column.pack_start(col_cell_img, False)
-        self.column.pack_start(self.col_cell_text, True)
-        self.column.add_attribute(self.col_cell_text, "text", 0)
-        self.column.add_attribute(col_cell_img, "pixbuf", 2)
-        
-        self.tree.append_column(self.column)
-        self.tree.expand_row(Gtk.TreePath.new_first(),False)
-        select = self.tree.get_selection()
-        select.connect("changed", self.on_tree_selection_changed)
-        self.tree.connect("row_expanded",self.on_tree_row_expanded)
-        self.tree.connect("row_collapsed",self.on_tree_row_collapsed)
-        
-        for path in expanded_paths:
-            self.tree.expand_row(path,False)
-        
-        #пример реакции на двойное нажатие
-        #https://github.com/mtwebster/git-monkey/blob/master/usr/lib/git-monkey/git-monkey.py       
-        sw=Gtk.ScrolledWindow()
-        sw.add(self.tree)
-        self.pack_end(sw,True,True,0)    
-    
-    # рекурсивная функция для наполнения дерева с учётом веса узлов
-    def populate_tree_branch(self,nc: NodeController,db_nodes,parent_id,pixbufs,expanded_paths,store,parent_tree_node):
-        children=nc.select_by_parent(db_nodes, parent_id)
-        
-        for db_node in children:
-            tree_node=store.append(parent_tree_node, [db_node.name,db_node.type,pixbufs[db_node.type],
-                                                      db_node.parent_id,db_node.node_id]) 
-            if db_node.expanded:
-                expanded_paths.append(store.get_path(tree_node))
-            
-            self.populate_tree_branch(nc, db_nodes, db_node.node_id, pixbufs, expanded_paths, store, tree_node)
-    
-    def on_tree_selection_changed(self,selection):
-        model, treeiter = selection.get_selected()
-        if treeiter is None:
-            self.button_delete.set_sensitive(False)
-            self.button_folder.set_sensitive(False)
-            self.button_memo.set_sensitive(False)
-            self.button_password.set_sensitive(False)
-            self.button_url.set_sensitive(False)
-            self.button_up.set_sensitive(False)
-            self.button_down.set_sensitive(False)
-            self.button_cut.set_sensitive(False)
-            self.button_paste.set_sensitive(False)
-            self.subscriber.on_node_changed(self.subscriber,None) 
-        else:
-            node_type=model[treeiter][1]
-            node_id=model[treeiter][4]
-            
-            self.button_folder.set_sensitive(True)
-            self.button_memo.set_sensitive(True)
-            self.button_password.set_sensitive(True)
-            self.button_url.set_sensitive(True)
-            self.button_cut.set_sensitive(True)
-            self.button_paste.set_sensitive(False)
-            
-            if node_type==NodeType.FOLDER.value:
-                self.button_paste.set_sensitive(self.cut_path is not None)
-                self.button_delete.set_sensitive(False)
-                #если папка не root и пустая - можно удалять
-                if not model[treeiter][3]==0 and not model.iter_has_child(treeiter):
-                    self.button_delete.set_sensitive(True)                    
-                
-            if node_type==NodeType.MEMO.value:
-                self.button_delete.set_sensitive(True) 
-                                 
-            if node_type==NodeType.PASSWORD.value:
-                self.button_delete.set_sensitive(True)
-
-            if node_type==NodeType.URL.value:
-                self.button_delete.set_sensitive(True)
-            
-            self.button_up.set_sensitive(model.iter_previous(treeiter) is not None)
-            self.button_down.set_sensitive(model.iter_next(treeiter) is not None)
-            
-            self.subscriber.on_node_changed(node_id=node_id,node_type=node_type)     
-            
-    
-    def on_button_folder_clicked(self, widget):
-        tree_item=["Папка",NodeType.FOLDER.value,self.folder_pixbuf,-1,-1]
-        self.create_node(tree_item)        
-            
-    def on_button_memo_clicked(self, widget):
-        tree_item=["Заметка",NodeType.MEMO.value,self.memo_pixbuf,-1,-1]
-        self.create_node(tree_item)  
-
-    def on_button_password_clicked(self, widget):
-        tree_item=["Пароль",NodeType.PASSWORD.value,self.password_pixbuf,-1,-1]
-        self.create_node(tree_item)  
-            
-    def on_button_url_clicked(self, widget):    
-        tree_item=["Ссылка",NodeType.URL.value,self.url_pixbuf,-1,-1]
-        self.create_node(tree_item)      
-            
-    def on_button_delete_clicked(self, widget):
-        dialog = Gtk.MessageDialog(
-            flags=0,
-            transient_for=ui.app_window,
-            message_type=Gtk.MessageType.QUESTION,
-            buttons=Gtk.ButtonsType.YES_NO,
-            text="Вы уверены, что хотите удалить этот элемент?",
-        )
-
-        response = dialog.run()
-        dialog.destroy()
-        
-        if response == Gtk.ResponseType.YES:
-            selection=self.tree.get_selection()
-            if selection:
-                model, treeiter = selection.get_selected()
-                node_id=model[treeiter][4]
-                model.remove(treeiter)
-                NodeController().delete(node_id)                
-        
-    def on_tree_edited(self,cell_renderer, path, new_text):
-        treeiter = self.tree.get_model().get_iter(path)
-        tree_item=self.tree.get_model()[treeiter]
-        tree_item[0]=new_text
-        controller=NodeController()
-        db_node=None
-        if tree_item[4]==-1:            
-            db_node=Node(name=new_text,expanded=True,parent_id=tree_item[3],type=tree_item[1])            
-        else:
-            db_node=controller.get(tree_item[4])
-            db_node.name=new_text
-            
-        controller.save(db_node)
-        
-        if tree_item[4]==-1:
-            tree_item[4]=db_node.node_id
-        
-        self.subscriber.on_node_edited(node_id=db_node.node_id,node_type=db_node.type)
-    
-    def create_node(self,tree_item): 
-        selection=self.tree.get_selection()
-        if selection:
-            model, treeiter = selection.get_selected()
-            parent_node=model[treeiter]       
-            
-            if parent_node[1]!=NodeType.FOLDER.value:
-                treeiter=model.iter_parent(treeiter)
-                parent_node=model[treeiter] 
-                
-            tree_item[3]=parent_node[4]
-            new_iter=model.append(treeiter,tree_item)
-            selection.select_iter(new_iter)
-            new_path=model.get_path(new_iter)
-            self.tree.expand_to_path(new_path)
-            self.tree.set_cursor_on_cell(new_path,self.column,self.col_cell_text,True)
-
-
-    def on_tree_row_collapsed(self,widget,treeiter,path):
-        tree_item=self.tree.get_model()[treeiter]
-        nc=NodeController()
-        nc.save_collapsed(tree_item[4])
-        
-    def on_tree_row_expanded(self,widget,treeiter,path):
-        tree_item=self.tree.get_model()[treeiter]
-        nc=NodeController()
-        nc.save_expanded(tree_item[4])       
-
-    def on_button_up_clicked(self,widget):
-        selection=self.tree.get_selection()
-        if selection:
-            model, treeiter = selection.get_selected()
-            prev_iter=model.iter_previous(treeiter)
-            if prev_iter:
-                nc=NodeController()
-                nc.swap_weights(model[treeiter][4], model[prev_iter][4])
-                model.swap(treeiter,prev_iter)            
-    
-    def on_button_down_clicked(self,widget):
-        selection=self.tree.get_selection()
-        if selection:
-            model, treeiter = selection.get_selected()
-            next_iter=model.iter_next(treeiter)
-            if next_iter:
-                nc=NodeController()
-                nc.swap_weights(model[treeiter][4], model[next_iter][4])
-                model.swap(treeiter,next_iter)
-    
-    def on_button_cut_clicked(self,widget):
-        selection=self.tree.get_selection()
-        if selection:
-            model, treeiter = selection.get_selected()
-            self.cut_path=model.get_path(treeiter)
-    
-    def on_button_paste_clicked(self,widget):
-        if self.cut_path:
-            selection=self.tree.get_selection()
-            if selection:
-                model, treeiter = selection.get_selected()
-                #FIXME: не разрешать вставлять в качестве дочерней ноды самого себя
-                
-                #TreeModel не позволяет менять родителя у ноды, поэтому вносим изменения в БД, а затем перезаливаем
-                #через путь self.cut_path получить ноду по этому пути, извлечь node_id
-                source_iter=model.get_iter(self.cut_path)
-                source_node=model[source_iter]
-                
-                # новая папка
-                dest_node=model[treeiter]
-            
-                nc=NodeController()
-                nc.change_parent(source_node[4], dest_node[4])
-                
-                model.clear()
-                
-                expanded_paths=[]
-                self.populate_tree(model,expanded_paths)
-                
-                self.tree.expand_row(Gtk.TreePath.new_first(),False)
-                
-                for path in expanded_paths:
-                    self.tree.expand_row(path,False)
-                          
-                self.cut_path=None
-                
-    def populate_tree(self,model,expanded_paths):
-        pixbufs={
-            1: self.folder_pixbuf,
-            2: self.memo_pixbuf,
-            3: self.password_pixbuf,
-            4: self.url_pixbuf
+        self.node_images={
+            NodeType.FOLDER.value: tk.PhotoImage(file="images/1f4c1.png"),
+            NodeType.MEMO.value: tk.PhotoImage(file="images/1f4dd.png"),
+            NodeType.PASSWORD.value: tk.PhotoImage(file="images/1f511.png"),
+            NodeType.URL.value: tk.PhotoImage(file="images/1f517.png") 
             }
+        
+        self.tree_frame = ttk.Frame(self)        
+        self.tree=ttk.Treeview(self.tree_frame,show="tree")
+        vsb = ttk.Scrollbar(self.tree_frame, orient="vertical", command=self.tree.yview)
+        self.tree.grid(row=0, column=0, sticky='nsew')
+        vsb.grid(row=0, column=1, sticky='ns')
+        self.tree_frame.grid_columnconfigure(0, weight=1)
+        self.tree_frame.grid_rowconfigure(0, weight=1)
+        
+        self.tree_frame.pack(side=tk.TOP, fill=tk.BOTH, expand = True)
+        #https://stackoverflow.com/questions/18562123/how-to-make-ttk-treeviews-rows-editable     
+        self.tree.bind("<Double-1>", lambda event: self.onDoubleClick(event))   
+        self.tree.bind('<<TreeviewSelect>>', self.item_selected)
+        self.populate_tree()
+
+    def populate_tree(self):
         
         nc=NodeController()
         db_root=nc.get_root()
-        root_node=model.append(None, ["Root",NodeType.FOLDER.value,self.folder_pixbuf,0,db_root.node_id])   
-        db_nodes=nc.list()                        
-        self.populate_tree_branch(nc, db_nodes, db_root.node_id, pixbufs, expanded_paths, model, root_node)  
+        root_item=self.tree.insert("",tk.END,db_root.node_id,image=self.node_images[NodeType.FOLDER.value],text="Root", open=True,values={db_root.type})
+        #db_nodes=nc.list()                        
+        #self.populate_tree_branch(nc, db_nodes, db_root.node_id, pixbufs, expanded_paths, model, root_node)  
+
+    def onDoubleClick(self, event):    
+        try:  # in case there was no previous popup
+            self.entryPopup.destroy()
+        except AttributeError:
+            pass
+    
+        # what row and column was clicked on
+        rowid = self.tree.identify_row(event.y)
+        column = self.tree.identify_column(event.x)
+    
+        self.showPopup(rowid, column)
         
+    def showPopup(self,rowid,column):
+        # get column position info
+        x,y,width,height = self.tree.bbox(rowid, column)
+    
+        # y-axis offset
+        pady = height // 2
+    
+        # place Entry popup properly         
+        text = self.tree.item(rowid, 'text')
+        self.entryPopup = EntryPopup(self.tree, rowid, text)
+        self.entryPopup.place( x=0, y=y+pady, anchor=tk.W, relwidth=1)
+        self.entryPopup.bind("<Destroy>",self.on_entry_destroyed)
+        #подписаться на что-то вроде on destroy для сохранения изменений в БД
+        
+    def item_selected(self,event):
+    # Get the selected item ID(s)
+        selected_items = self.tree.selection()
+    
+        if selected_items:
+            item_id = selected_items[0]
+            item_data = self.tree.item(item_id)            
+
+            self.button_folder.config(state=tk.NORMAL)
+            self.button_memo.config(state=tk.NORMAL)
+            self.button_password.config(state=tk.NORMAL)
+            self.button_url.config(state=tk.NORMAL)
+            self.button_cut.config(state=tk.NORMAL)
+            self.button_paste.config(state=tk.DISABLED)
             
+            node_type=item_data['values'][0]
+            
+            if node_type==NodeType.FOLDER.value:
+                parent_iid=self.tree.parent(item_id)
+                self.button_cut.config(state=tk.DISABLED if parent_iid=="" else tk.NORMAL)
+                self.button_paste.config(state=tk.NORMAL if self.cut_item_id is not None else tk.DISABLED)                
+                self.button_delete.config(state=tk.DISABLED)
+                #если папка не root и пустая - можно удалять
+                children=self.tree.get_children(item_id)                            
+                if not parent_iid=="" and not children:
+                    self.button_delete.config(state=tk.NORMAL)                  
+                
+            if node_type==NodeType.MEMO.value:
+                self.button_delete.config(state=tk.NORMAL)
+                                 
+            if node_type==NodeType.PASSWORD.value:
+                self.button_delete.config(state=tk.NORMAL)
+
+            if node_type==NodeType.URL.value:
+                self.button_delete.config(state=tk.NORMAL)
+            
+            next_iid=self.tree.next(item_id)
+            prev_iid=self.tree.prev(item_id)
+            self.button_up.config(state=tk.DISABLED if prev_iid=="" else tk.NORMAL)
+            self.button_down.config(state=tk.DISABLED if next_iid=="" else tk.NORMAL)
+            
+            #self.subscriber.on_node_changed(node_id=node_id,node_type=node_type)                 
+        else:
+            self.button_delete.config(state=tk.DISABLED)
+            self.button_folder.config(state=tk.DISABLED)
+            self.button_memo.config(state=tk.DISABLED)
+            self.button_password.config(state=tk.DISABLED)
+            self.button_url.config(state=tk.DISABLED)
+            self.button_up.config(state=tk.DISABLED)
+            self.button_down.config(state=tk.DISABLED)
+            self.button_cut.config(state=tk.DISABLED)
+            self.button_paste.config(state=tk.DISABLED)
+            #self.subscriber.on_node_changed(self.subscriber,None) 
+
+    def create_node(self,node_text,node_type : NodeType): 
+        selected_items = self.tree.selection()
+        if selected_items:
+            parent_id = selected_items[0]                
+            parent_data=self.tree.item(parent_id)
+            parent_type=parent_data['values'][0]
+            
+            if parent_type!=NodeType.FOLDER.value:
+                parent_id=self.tree.parent(parent_id)
+                parent_data=self.tree.item(parent_id)
+                        
+            node_image=self.node_images[node_type.value]
+                        
+            child_id=self.tree.insert(parent_id,tk.END,-1,image=node_image,text=node_text, open=True,values={node_type.value})
+            self.tree.see(child_id)
+            
+            self.showPopup(child_id, "#0")
+
+    def on_folder_add(self):
+        self.create_node("Папка",NodeType.FOLDER)        
+            
+    def on_memo_add(self):
+        self.create_node("Заметка", NodeType.MEMO)  
+
+    def on_password_add(self):
+        self.create_node("Пароль",NodeType.PASSWORD)  
+            
+    def on_url_add(self):    
+        self.create_node("Ссылка",NodeType.URL)    
+        
+    def on_delete(self):
+        result = tk.messagebox.askyesno("Подтверждение", "Вы уверены, что хотите удалить этот элемент?",icon=tk.messagebox.QUESTION)
+        if result==tk.YES:
+            selected_items = self.tree.selection()
+            if selected_items:
+                node_id = selected_items[0]
+                self.tree.delete(node_id)
+                NodeController().delete(node_id) 
+
+    def on_item_up(self):
+        selected_items = self.tree.selection()
+        if selected_items:
+            node_id = selected_items[0]
+            prev_id=self.tree.prev(node_id)
+            if prev_id:
+                parent_iid=self.tree.parent(node_id)
+                prev_index=self.tree.index(prev_id)
+                nc=NodeController()
+                nc.swap_weights(node_id, prev_id)
+                self.tree.move(node_id,parent_iid,prev_index)
+                
+    def on_item_down(self):
+        selected_items = self.tree.selection()
+        if selected_items:
+            node_id = selected_items[0]
+            next_id=self.tree.next(node_id)
+            if next_id:
+                parent_iid=self.tree.parent(node_id)
+                next_index=self.tree.index(next_id)
+                nc=NodeController()
+                nc.swap_weights(node_id, next_id)
+                self.tree.move(node_id,parent_iid,next_index)
+                     
+    def on_cut(self):
+        selected_items = self.tree.selection()
+        if selected_items:
+            self.cut_item_id = selected_items[0]
+    
+    def on_paste(self):
+        selected_items = self.tree.selection()
+        if selected_items and self.cut_item_id:
+            parent_id = selected_items[0]            
+            self.tree.move(self.cut_item_id,parent_id,tk.END)            
+            nc=NodeController()
+            nc.change_parent(self.cut_item_id, parent_id)
+            self.tree.see(self.cut_item_id)
+            self.cut_item_id=None
+    
+    def on_entry_destroyed(self,event):        
+        if self.entryPopup and self.entryPopup.result:
+            node_id=None
+            
+            if self.tree.exists(-1):
+                node_id=-1
+            else:
+                selected_items = self.tree.selection()
+                if selected_items:
+                    node_id=selected_items[0]
+            
+            if node_id:
+                node_text=self.tree.item(node_id,"text")  
+                item_data=self.tree.item(node_id)  
+                node_type=item_data['values'][0]
+                
+                parent_id=self.tree.parent(node_id)
+                
+                controller=NodeController()
+                db_node=None
+                if node_id==-1:            
+                    db_node=Node(name=node_text,expanded=True,parent_id=parent_id,type=node_type)            
+                else:
+                    db_node=controller.get(node_id)
+                    db_node.name=node_text
+                
+                controller.save(db_node)
+            
+                if node_id==-1:
+                    self.tree.delete(node_id)
+                    node_image=self.node_images[node_type]
+                    child_id=self.tree.insert(parent_id,tk.END,db_node.node_id,image=node_image,text=node_text, open=True,values={node_type})
+                    self.tree.selection_set(child_id)
+                
+        
+            #self.subscriber.on_node_edited(node_id=db_node.node_id,node_type=db_node.type)
