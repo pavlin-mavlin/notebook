@@ -21,6 +21,8 @@ class App(tk.Tk):
         item.add_command(label='Команды',command=self.on_commands)
         item.add_command(label='Выход', command=self.quit)
         menu.add_cascade(label='Файл', menu=item)
+        photo = tk.PhotoImage(file = 'images/1f4d4.png')
+        self.wm_iconphoto(False, photo)
 
         parser = argparse.ArgumentParser()
         parser.add_argument("-d", "--database", help="set database path")

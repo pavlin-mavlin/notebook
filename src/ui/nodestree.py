@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 from models.node import Node,NodeType
 import ui
 from controllers.nodecontroller import NodeController
@@ -51,12 +52,7 @@ class NodesTree(tk.Frame):
         self.button_paste.pack(side=tk.LEFT, padx=2, pady=5)
                 
         toolbar.pack(side=tk.TOP, fill=tk.X)
-        
-        #self.image_folder=tk.PhotoImage(file="images/1f4c1.png")
-        #self.image_memo=tk.PhotoImage(file="images/1f4dd.png")
-        #self.image_password=tk.PhotoImage(file="images/1f511.png")
-        #self.image_url=tk.PhotoImage(file="images/1f517.png")        
-        
+                 
         self.node_images={
             NodeType.FOLDER.value: tk.PhotoImage(file="images/1f4c1.png"),
             NodeType.MEMO.value: tk.PhotoImage(file="images/1f4dd.png"),
@@ -74,8 +70,10 @@ class NodesTree(tk.Frame):
         
         self.tree_frame.pack(side=tk.TOP, fill=tk.BOTH, expand = True)
         #https://stackoverflow.com/questions/18562123/how-to-make-ttk-treeviews-rows-editable     
-        self.tree.bind("<Double-1>", lambda event: self.onDoubleClick(event))   
-        self.tree.bind('<<TreeviewSelect>>', self.item_selected)
+        self.tree.bind("<Double-1>", lambda event: self.on_item_doubleclick(event))   
+        self.tree.bind('<<TreeviewSelect>>', self.on_item_selected)
+        self.tree.bind('<<TreeviewOpen>>', lambda event: self.on_item_open(event))
+        self.tree.bind('<<TreeviewClose>>', lambda event: self.on_item_close(event))
         self.populate_tree()
 
     def populate_tree(self):
@@ -83,10 +81,18 @@ class NodesTree(tk.Frame):
         nc=NodeController()
         db_root=nc.get_root()
         root_item=self.tree.insert("",tk.END,db_root.node_id,image=self.node_images[NodeType.FOLDER.value],text="Root", open=True,values={db_root.type})
-        #db_nodes=nc.list()                        
-        #self.populate_tree_branch(nc, db_nodes, db_root.node_id, pixbufs, expanded_paths, model, root_node)  
+        db_nodes=nc.list()                        
+        self.populate_tree_branch(nc, db_nodes, db_root.node_id)
 
-    def onDoubleClick(self, event):    
+    # рекурсивная функция для наполнения дерева с учётом веса узлов
+    def populate_tree_branch(self,nc: NodeController,db_nodes,parent_id):
+        children=nc.select_by_parent(db_nodes, parent_id)
+        
+        for db_node in children:
+            self.tree.insert(parent_id,tk.END,db_node.node_id,image=self.node_images[db_node.type],text=db_node.name, open=db_node.expanded,values={db_node.type})            
+            self.populate_tree_branch(nc, db_nodes, db_node.node_id)        
+
+    def on_item_doubleclick(self, event):    
         try:  # in case there was no previous popup
             self.entryPopup.destroy()
         except AttributeError:
@@ -95,24 +101,23 @@ class NodesTree(tk.Frame):
         # what row and column was clicked on
         rowid = self.tree.identify_row(event.y)
         column = self.tree.identify_column(event.x)
-    
+
         self.showPopup(rowid, column)
         
-    def showPopup(self,rowid,column):
+    def showPopup(self,rowid,column, is_new=False):
         # get column position info
         x,y,width,height = self.tree.bbox(rowid, column)
     
-        # y-axis offset
+        # y-axis offset height // 2
         pady = height // 2
     
         # place Entry popup properly         
         text = self.tree.item(rowid, 'text')
         self.entryPopup = EntryPopup(self.tree, rowid, text)
         self.entryPopup.place( x=0, y=y+pady, anchor=tk.W, relwidth=1)
-        self.entryPopup.bind("<Destroy>",self.on_entry_destroyed)
-        #подписаться на что-то вроде on destroy для сохранения изменений в БД
+        self.entryPopup.bind("<Destroy>",lambda event: self.on_entry_destroyed(event))   
         
-    def item_selected(self,event):
+    def on_item_selected(self,event):
     # Get the selected item ID(s)
         selected_items = self.tree.selection()
     
@@ -164,7 +169,24 @@ class NodesTree(tk.Frame):
             self.button_down.config(state=tk.DISABLED)
             self.button_cut.config(state=tk.DISABLED)
             self.button_paste.config(state=tk.DISABLED)
-            #self.subscriber.on_node_changed(self.subscriber,None) 
+            #self.subscriber.on_node_changed(self.subscriber,None)
+
+    def on_item_open(self,event):
+        selected_items = self.tree.selection()
+    
+        if selected_items:
+            item_id = selected_items[0]
+            nc=NodeController()
+            nc.save_expanded(item_id)               
+
+    def on_item_close(self,event):
+        selected_items = self.tree.selection()
+    
+        if selected_items:
+            item_id = selected_items[0]
+            nc=NodeController()
+            nc.save_collapsed(item_id)
+        
 
     def create_node(self,node_text,node_type : NodeType): 
         selected_items = self.tree.selection()
@@ -180,9 +202,12 @@ class NodesTree(tk.Frame):
             node_image=self.node_images[node_type.value]
                         
             child_id=self.tree.insert(parent_id,tk.END,-1,image=node_image,text=node_text, open=True,values={node_type.value})
+            self.tree.item(parent_id, open=True)
+            self.tree.update_idletasks() #это важно
             self.tree.see(child_id)
+            self.tree.selection_set(child_id)
             
-            self.showPopup(child_id, "#0")
+            self.showPopup(child_id, "#0",True)
 
     def on_folder_add(self):
         self.create_node("Папка",NodeType.FOLDER)        
@@ -197,7 +222,7 @@ class NodesTree(tk.Frame):
         self.create_node("Ссылка",NodeType.URL)    
         
     def on_delete(self):
-        result = tk.messagebox.askyesno("Подтверждение", "Вы уверены, что хотите удалить этот элемент?",icon=tk.messagebox.QUESTION)
+        result = messagebox.askyesno("Подтверждение", "Вы уверены, что хотите удалить этот элемент?",icon=tk.messagebox.QUESTION)
         if result==tk.YES:
             selected_items = self.tree.selection()
             if selected_items:
