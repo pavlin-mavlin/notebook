@@ -15,16 +15,23 @@ class CommandController(object):
             command=Command()
             command.name="выполнить"
             command.command=""
-            self.update(command)        
-        
+            self.update(command)    
+            
     def list(self):
-        return Command.select()
+        return Command.select()            
+        
+    def list_names_as_dict(self):
+        ret=(Command.select(Command.name).dicts())
+        return ret
     
     def update(self,command: Command):
         command.save()
     
     def get(self,command_id):
         return Command.select().where(Command.command_id==command_id).get_or_none()
+    
+    def get_by_name(self,name):
+        return Command.select().where(Command.name==name).get_or_none()
     
     def delete(self,command_id):
         Command.delete_by_id(command_id)

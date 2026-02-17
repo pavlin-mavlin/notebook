@@ -8,8 +8,8 @@ from controllers.commandcontroller import CommandController
 from ui.commandsdialog import CommandsDialog
 from ui.nodestree import NodesTree
 import tkinter as tk
-from tkinter import ttk
 import argparse
+from ui.editorpanel import EditorPanel
  
 class App(tk.Tk):
     def __init__(self,*args, **kwargs):
@@ -48,9 +48,10 @@ class App(tk.Tk):
         left_frame = NodesTree(self)
         left_frame.pack(side="left")
         pw.add(left_frame)
-        right_frame = ttk.Frame(self)
+        right_frame = EditorPanel(self)
         right_frame.pack(side="right")        
         pw.add(right_frame)
+        left_frame.subscriber=right_frame
         
         pw.pack(fill = tk.BOTH, expand = True)
         pw.configure(sashrelief = tk.RAISED)

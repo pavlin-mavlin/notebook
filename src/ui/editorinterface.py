@@ -1,9 +1,6 @@
-import gi
+import tkinter as tk
 
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
-
-class EditorInterface(Gtk.Box):
+class EditorInterface(tk.Frame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     

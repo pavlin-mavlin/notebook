@@ -2,53 +2,52 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from models.node import Node,NodeType
-import ui
 from controllers.nodecontroller import NodeController
 from ui.entrypopup import EntryPopup
 
-class NodesTree(tk.Frame):        
+class NodesTree(ttk.Frame):        
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
         self.cut_item_id=None        
         
-        toolbar = tk.Frame(self, borderwidth = 1, relief=tk.RAISED)    
+        toolbar = ttk.Frame(self, borderwidth = 1, relief=tk.RAISED)    
             
         self.image_folder_add = tk.PhotoImage(file="images/folder-add.png") # self нужно, хотя не используется        
-        self.button_folder = tk.Button(toolbar, image=self.image_folder_add, state=tk.DISABLED,width=34,command=self.on_folder_add) #relief=tk.FLAT, 
+        self.button_folder = ttk.Button(toolbar, image=self.image_folder_add, state=tk.DISABLED,width=34,command=self.on_folder_add) #relief=tk.FLAT, 
         self.button_folder.pack(side=tk.LEFT, padx=2, pady=5)
         
         self.image_memo_add=tk.PhotoImage(file="images/memo-add.png")
-        self.button_memo=tk.Button(toolbar, image=self.image_memo_add, state=tk.DISABLED,width=34,command=self.on_memo_add)
+        self.button_memo=ttk.Button(toolbar, image=self.image_memo_add, state=tk.DISABLED,width=34,command=self.on_memo_add)
         self.button_memo.pack(side=tk.LEFT, padx=2, pady=5)
         
         self.image_password_add=tk.PhotoImage(file="images/password-add.png")
-        self.button_password=tk.Button(toolbar, image=self.image_password_add, state=tk.DISABLED,width=34,command=self.on_password_add)
+        self.button_password=ttk.Button(toolbar, image=self.image_password_add, state=tk.DISABLED,width=34,command=self.on_password_add)
         self.button_password.pack(side=tk.LEFT, padx=2, pady=5)
                 
         self.image_url_add=tk.PhotoImage(file="images/link-add.png")
-        self.button_url=tk.Button(toolbar, image=self.image_url_add,  state=tk.DISABLED,width=34,command=self.on_url_add)
+        self.button_url=ttk.Button(toolbar, image=self.image_url_add,  state=tk.DISABLED,width=34,command=self.on_url_add)
         self.button_url.pack(side=tk.LEFT, padx=2, pady=5)
 
         self.image_delete=tk.PhotoImage(file="images/274c.png")
-        self.button_delete=tk.Button(toolbar, image=self.image_delete,  state=tk.DISABLED,width=34,command=self.on_delete)
+        self.button_delete=ttk.Button(toolbar, image=self.image_delete,  state=tk.DISABLED,width=34,command=self.on_delete)
         self.button_delete.pack(side=tk.LEFT, padx=2, pady=5)
         
         self.image_up=tk.PhotoImage(file="images/2b06.png")
-        self.button_up=tk.Button(toolbar, image=self.image_up,  state=tk.DISABLED,width=34,command=self.on_item_up)
+        self.button_up=ttk.Button(toolbar, image=self.image_up,  state=tk.DISABLED,width=34,command=self.on_item_up)
         self.button_up.pack(side=tk.LEFT, padx=2, pady=5)
         
         self.image_down=tk.PhotoImage(file="images/2b07.png")
-        self.button_down=tk.Button(toolbar, image=self.image_down,  state=tk.DISABLED,width=34,command=self.on_item_down)
+        self.button_down=ttk.Button(toolbar, image=self.image_down,  state=tk.DISABLED,width=34,command=self.on_item_down)
         self.button_down.pack(side=tk.LEFT, padx=2, pady=5)
         
         self.image_cut=tk.PhotoImage(file="images/2702-rot.png")
-        self.button_cut=tk.Button(toolbar, image=self.image_cut, width=34, state=tk.DISABLED,command=self.on_cut)
+        self.button_cut=ttk.Button(toolbar, image=self.image_cut, width=34, state=tk.DISABLED,command=self.on_cut)
         self.button_cut.pack(side=tk.LEFT, padx=2, pady=5)
         
         self.image_paste=tk.PhotoImage(file="images/1f4cb.png")
-        self.button_paste=tk.Button(toolbar, image=self.image_paste, width=34, state=tk.DISABLED,command=self.on_paste)
+        self.button_paste=ttk.Button(toolbar, image=self.image_paste, width=34, state=tk.DISABLED,command=self.on_paste)
         self.button_paste.pack(side=tk.LEFT, padx=2, pady=5)
                 
         toolbar.pack(side=tk.TOP, fill=tk.X)
@@ -71,7 +70,7 @@ class NodesTree(tk.Frame):
         self.tree_frame.pack(side=tk.TOP, fill=tk.BOTH, expand = True)
         #https://stackoverflow.com/questions/18562123/how-to-make-ttk-treeviews-rows-editable     
         self.tree.bind("<Double-1>", lambda event: self.on_item_doubleclick(event))   
-        self.tree.bind('<<TreeviewSelect>>', self.on_item_selected)
+        self.tree.bind('<<TreeviewSelect>>', lambda event: self.on_item_selected(event))
         self.tree.bind('<<TreeviewOpen>>', lambda event: self.on_item_open(event))
         self.tree.bind('<<TreeviewClose>>', lambda event: self.on_item_close(event))
         self.populate_tree()
@@ -80,7 +79,7 @@ class NodesTree(tk.Frame):
         
         nc=NodeController()
         db_root=nc.get_root()
-        root_item=self.tree.insert("",tk.END,db_root.node_id,image=self.node_images[NodeType.FOLDER.value],text="Root", open=True,values={db_root.type})
+        self.tree.insert("",tk.END,db_root.node_id,image=self.node_images[NodeType.FOLDER.value],text="Root", open=True,values={db_root.type})
         db_nodes=nc.list()                        
         self.populate_tree_branch(nc, db_nodes, db_root.node_id)
 
@@ -158,7 +157,7 @@ class NodesTree(tk.Frame):
             self.button_up.config(state=tk.DISABLED if prev_iid=="" else tk.NORMAL)
             self.button_down.config(state=tk.DISABLED if next_iid=="" else tk.NORMAL)
             
-            #self.subscriber.on_node_changed(node_id=node_id,node_type=node_type)                 
+            self.subscriber.on_node_changed(node_id=item_id,node_type=node_type)                 
         else:
             self.button_delete.config(state=tk.DISABLED)
             self.button_folder.config(state=tk.DISABLED)
@@ -169,7 +168,7 @@ class NodesTree(tk.Frame):
             self.button_down.config(state=tk.DISABLED)
             self.button_cut.config(state=tk.DISABLED)
             self.button_paste.config(state=tk.DISABLED)
-            #self.subscriber.on_node_changed(self.subscriber,None)
+            self.subscriber.on_node_changed(self.subscriber,None)
 
     def on_item_open(self,event):
         selected_items = self.tree.selection()
@@ -304,4 +303,4 @@ class NodesTree(tk.Frame):
                     self.tree.selection_set(child_id)
                 
         
-            #self.subscriber.on_node_edited(node_id=db_node.node_id,node_type=db_node.type)
+                self.subscriber.on_node_edited(node_id=db_node.node_id,node_type=db_node.type)

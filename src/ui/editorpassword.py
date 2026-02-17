@@ -1,63 +1,55 @@
-import gi
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, Gdk
+import tkinter as tk
+from tkinter import ttk
 from ui.editorinterface import EditorInterface
 from controllers.passwordcontroller import PasswordController
 from models.password import Password
-import ui
 
 class EditorPassword(EditorInterface):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+                        
+        self.okimage=tk.PhotoImage(file="images/2714-green.png")
         
-        self.set_orientation(Gtk.Orientation.VERTICAL)
+        self.label_username = ttk.Label(self,text="Имя пользователя: ")
+        self.label_username.grid(row=0, column=0, sticky='nsew')
         
-        grid = Gtk.Grid(border_width=10,row_spacing=10,column_spacing=10)
+        self.image_copy=tk.PhotoImage(file="images/copy.png")
+        self.button_username_copy=ttk.Button(self,image=self.image_copy, command=self.on_username_copy)         
+        self.button_username_copy.grid(row=0, column=1)
         
-        label_username = Gtk.Label(label="Имя пользователя: ")
-        grid.add(label_username)
+        self.username_text = tk.StringVar()
+        self.entry_username = ttk.Entry(self,textvariable = self.username_text)            
+        self.username_text.trace("w", lambda *args: self.character_limit(255,self.username_text))
+        self.entry_username.grid(row=0, column=2, sticky='nsew')
         
-        self.button_username_copy=Gtk.Button.new_from_icon_name("edit-copy",Gtk.IconSize.BUTTON)
-        self.button_username_copy.connect("clicked",self.on_username_copy)
-        grid.attach(self.button_username_copy,1,0,1,1)
+        self.label_password=ttk.Label(self,text="Пароль: ")
+        self.label_password.grid(row=1, column=0, sticky='nsew')
         
-        self.entry_username = Gtk.Entry(hexpand=True)
-        self.entry_username.set_max_length(255) 
-        grid.attach_next_to(self.entry_username,self.button_username_copy,Gtk.PositionType.RIGHT,1,1)
+        self.button_password_copy=ttk.Button(self,image=self.image_copy, command=self.on_password_copy)  
+        self.button_password_copy.grid(row=1, column=1)
         
-        label_password=Gtk.Label(label="Пароль: ",xalign=1)
-        grid.attach(label_password,0,1,1,1)
+        self.password_text = tk.StringVar()
+        self.entry_password = ttk.Entry(self,textvariable = self.password_text,show="•")
+        self.password_text .trace("w", lambda *args: self.character_limit(255,self.password_text))
+        self.entry_password.grid(row=1, column=2, sticky='nsew')
         
-        self.button_password_copy=Gtk.Button.new_from_icon_name("edit-copy",Gtk.IconSize.BUTTON)
-        self.button_password_copy.connect("clicked",self.on_password_copy)
-        grid.attach(self.button_password_copy,1,1,1,1)
+        self.image_password_show=tk.PhotoImage(file="images/2a-20e3.png")
+        self.button_password_show=ttk.Button(self,image=self.image_password_show, command=self.on_password_show) 
+        self.button_password_show.grid(row=1, column=3)
+                
+        self.label_description=ttk.Label(self,text="Описание")
+        self.pack()
         
-        self.entry_password = Gtk.Entry(hexpand=True)
-        self.entry_password.set_max_length(255)    
-        grid.attach_next_to(self.entry_password,self.button_password_copy,Gtk.PositionType.RIGHT,1,1)
-        
-        image_password_show=ui.get_scaled_image("2a-20e3.svg")
-        button_password_show=Gtk.Button(image=image_password_show)
-        button_password_show.connect("clicked",self.on_password_show)
-        grid.attach_next_to(button_password_show,self.entry_password,Gtk.PositionType.RIGHT,1,1)    
-
-        self.add(grid)
-        
-        label_description=Gtk.Label(label="Описание")
-        self.add(label_description)
-        
-        scrolledwindow = Gtk.ScrolledWindow(border_width=10)
-        scrolledwindow.set_hexpand(True)
-        scrolledwindow.set_vexpand(True)
-        self.textview = Gtk.TextView()        
-        scrolledwindow.add(self.textview)
-        self.add(scrolledwindow)
-        
-        self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-        
-        self.show_all()
-        
+        self.text_frame = ttk.Frame(self)        
+        self.textview=tk.Text(self.text_frame)
+        vsb = ttk.Scrollbar(self.text_frame, orient="vertical", command=self.textview.yview)
+        self.textview.grid(row=0, column=0, sticky='nsew')
+        vsb.grid(row=0, column=1, sticky='ns')
+        self.text_frame.grid_columnconfigure(0, weight=1)
+        self.text_frame.grid_rowconfigure(0, weight=1)
+        self.text_frame.pack(expand=1)
+                
     def load_data(self, node_id: int):
         self.password_id=None    
         if node_id!=-1:
@@ -66,10 +58,10 @@ class EditorPassword(EditorInterface):
             self.node_id=node_id
             
             if db_password:
-                self.entry_username.set_text(db_password.username)
-                self.entry_password.set_text(ui.make_password_placeholder(db_password.password))
-                textbuffer = self.textview.get_buffer()
-                textbuffer.set_text(db_password.description)
+                self.username_text.set(db_password.username)
+                self.password_text.set(db_password.password)     
+                self.textview.delete('1.0', tk.END)           
+                self.textview.insert(0,db_password.description)
                 self.password_id=db_password.password_id
     
     def save_data(self):
@@ -81,34 +73,39 @@ class EditorPassword(EditorInterface):
             db_password=Password()
             db_password.node_id=self.node_id
         
-        db_password.username=self.entry_username.get_text()
+        db_password.username=self.username_text.get()
         
-        if "•" not in self.entry_password.get_text():
-            db_password.password=self.entry_password.get_text()
+        if self.entry_password.cget("show")=="•":
+            db_password.password=self.password_text.get()
             
-        textbuffer = self.textview.get_buffer()
-        db_password.description=textbuffer.get_text(textbuffer.get_start_iter(),textbuffer.get_end_iter(),True)
+        db_password.description=self.textview.get(0)
         pc.update(db_password)
         self.password_id=db_password.password_id
     
     def on_username_copy(self, widget):
-        self.clipboard.set_text(self.entry_username.get_text(), -1)
-        okimage=ui.get_scaled_image("2714-green.svg")
-        self.button_username_copy.set_image(okimage)
+        self.clipboard_clear()
+        self.clipboard_append(self.username_text.get())      
+        self.button_username_copy.config(image=self.okimage)
         
     def on_password_copy(self, widget):
-        if "•" in self.entry_password.get_text():
+        self.clipboard_clear()
+        if self.entry_password.cget("show")=="•":
             pc=PasswordController()
             db_password=pc.get(self.password_id)
-            self.clipboard.set_text(db_password.password, -1)
+            self.clipboard_append(db_password.password)
         else:
-            self.clipboard.set_text(self.entry_password.get_text(), -1)     
+            self.clipboard_append(self.password_text.get())     
 
-        okimage=ui.get_scaled_image("2714-green.svg")
-        self.button_password_copy.set_image(okimage)
+        self.button_password_copy.config(image=self.okimage)
 
     def on_password_show(self,widget):
         if self.password_id:
             pc=PasswordController()
             db_password=pc.get(self.password_id)
-            self.entry_password.set_text(db_password.password)           
+            self.entry_password.conf(show="")
+            self.password_text.set(db_password.password)         
+
+    def character_limit(self,max_length,entry_text):
+        if len(entry_text.get()) > max_length:
+            entry_text.set(entry_text.get()[:max_length])
+        

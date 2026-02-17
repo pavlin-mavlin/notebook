@@ -1,6 +1,5 @@
-import gi
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
+import tkinter as tk
+from tkinter import ttk
 from ui.editorinterface import EditorInterface
 from controllers.memocontroller import MemoController
 from models.memo import Memo
@@ -10,13 +9,14 @@ class EditorMemo(EditorInterface):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        scrolledwindow = Gtk.ScrolledWindow(border_width=10)
-        scrolledwindow.set_hexpand(True)
-        scrolledwindow.set_vexpand(True)
-        self.textview = Gtk.TextView()
-        self.textbuffer = self.textview.get_buffer()
-        scrolledwindow.add(self.textview)
-        self.add(scrolledwindow)
+        self.text_frame = ttk.Frame(self)        
+        self.textview=tk.Text(self.text_frame)
+        vsb = ttk.Scrollbar(self.text_frame, orient="vertical", command=self.textview.yview)
+        self.textview.grid(row=0, column=0, sticky='nsew')
+        vsb.grid(row=0, column=1, sticky='ns')
+        self.text_frame.grid_columnconfigure(0, weight=1)
+        self.text_frame.grid_rowconfigure(0, weight=1)
+        
         self.memo_id=None  
         self.show_all()
 
@@ -28,8 +28,8 @@ class EditorMemo(EditorInterface):
             self.node_id=node_id
             
             if db_memo:
-                textbuffer = self.textview.get_buffer()
-                textbuffer.set_text(db_memo.memo)
+                self.textview.delete('1.0', tk.END)
+                self.textview.insert(0,db_memo.memo)
                 self.memo_id=db_memo.memo_id
     
     def save_data(self):
@@ -40,9 +40,8 @@ class EditorMemo(EditorInterface):
         else:
             db_memo=Memo()
             db_memo.node_id=self.node_id
-        
-        textbuffer = self.textview.get_buffer()
-        db_memo.memo=textbuffer.get_text(textbuffer.get_start_iter(),textbuffer.get_end_iter(),True)
+                
+        db_memo.memo=self.textview.get(0)
         mc.update(db_memo)
         self.memo_id=db_memo.memo_id
                 
