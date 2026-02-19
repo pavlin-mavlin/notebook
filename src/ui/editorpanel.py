@@ -65,11 +65,11 @@ class EditorPanel(ttk.Frame):
                 self.editor.load_data(self.node_id)
                        
     
-    def on_save(self,widget):
+    def on_save(self):
         if self.editor and self.node_id:
             self.editor.save_data()
             
-    def on_revert(self,widget):
+    def on_revert(self):
         if self.editor and self.node_id:            
             result = messagebox.askyesno("Подтверждение", "Вы уверены, что хотите отменить изменения?",icon=tk.messagebox.QUESTION)
             

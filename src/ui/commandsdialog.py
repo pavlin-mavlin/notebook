@@ -1,50 +1,48 @@
-import gi
+import tkinter as tk
+from tkinter import ttk
+
 from controllers.commandcontroller import CommandController
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
 from ui.commandeditdialog import CommandEditDialog
 from models.command import Command
+from tkinter import messagebox
 
-class CommandsDialog(Gtk.Dialog):
+class CommandsDialog(tk.Toplevel):
 
     def __init__(self, parent):
-        super().__init__(title="Список профилей", transient_for=parent, flags=0)
+        super().__init__(parent)
+        self.transient(parent)
+        self.minsize(300, 150)
+        self.title('Список команд')
+        self.resizable(0,0)
+                
+        self.list_frame = ttk.Frame(self)  
+        self.listbox=tk.Listbox(self.list_frame,selectmode=tk.SINGLE)
+        vsb = ttk.Scrollbar(self.list_frame, orient="vertical", command=self.listbox.yview)
+        self.listbox.grid(row=0, column=0, sticky='nsew')
+        vsb.grid(row=0, column=1, sticky='ns')
+        self.list_frame.grid_columnconfigure(0, weight=1)
+        self.list_frame.grid_rowconfigure(0, weight=1)                
+        self.list_frame.grid(column=0,rowspan=3)
         
-        self.set_default_size(300, 150)
-        content_box = self.get_content_area()
-        self.add_buttons("_OK", Gtk.ResponseType.OK)
+        button_add=ttk.Button(self, text="Добавить")
+        button_add.grid(row=0,column=1)
         
-        hBox=Gtk.Box(spacing=10,orientation=Gtk.Orientation.HORIZONTAL)                
+        button_edit=ttk.Button(self, text="Правка")
+        button_edit.grid(row=1,column=1)
         
-        self.listbox = Gtk.ListBox()
+        button_delete=ttk.Button(self, text="Удалить")
+        button_delete.grid(row=2,column=1)
+        
+        button_ok=ttk.Button(self, text="OK",command=self.destroy)
+        button_ok.grid(row=3,column=1)
+                
         self.populate_list()
         
-        hBox.pack_start(self.listbox,True,True,0)
-        
-        buttons_box=Gtk.Box(spacing=10,orientation=Gtk.Orientation.VERTICAL)
-        
-        button_add=Gtk.Button(label="Добавить")
-        button_add.connect("clicked",self.on_button_add)
-        buttons_box.add(button_add)
-        
-        button_edit=Gtk.Button(label="Правка")
-        button_edit.connect("clicked",self.on_button_edit)
-        buttons_box.add(button_edit)
-        
-        button_delete=Gtk.Button(label="Удалить")
-        button_delete.connect("clicked",self.on_button_delete)
-        buttons_box.add(button_delete)
-                        
-        hBox.pack_end(buttons_box,False,False,0)
-        
-        content_box.add(hBox)
-        
-        self.show_all()
         
     def on_button_add(self, widget):
         dialog = CommandEditDialog(self)
         response=dialog.run()
-        if response == Gtk.ResponseType.OK:
+        if response == "OK":
             command=Command()
             command.name=dialog.entry_name.get_text()
             command.command=dialog.entry_command.get_text()
@@ -60,7 +58,7 @@ class CommandsDialog(Gtk.Dialog):
         if row:
             dialog = CommandEditDialog(self,row.command_id)
             response=dialog.run()
-            if response == Gtk.ResponseType.OK:
+            if response == "OK":
                 cc=CommandController()
                 command=cc.get(row.command_id)
                 command.name=dialog.entry_name.get_text()
@@ -77,47 +75,19 @@ class CommandsDialog(Gtk.Dialog):
             cc=CommandController()
             can_delete=cc.can_delete(row.command_id)
             if can_delete:
-                dialog = Gtk.MessageDialog(
-                    transient_for=self,
-                    flags=0,
-                    message_type=Gtk.MessageType.QUESTION,
-                    buttons=Gtk.ButtonsType.YES_NO,
-                    text="Вы уверены, что хотите удалить этот элемент?",)
-                
-                response = dialog.run()            
-            
-                if response == Gtk.ResponseType.YES:     
+                result = messagebox.askyesno("Подтверждение", "Вы уверены, что хотите удалить этот элемент?",icon=tk.messagebox.QUESTION)
+                    
+                if result == tk.YES:     
                     cc.delete(row.command_id)
-                    self.populate_list()
-                
-                dialog.destroy()
-            else:
-                dialog = Gtk.MessageDialog(
-                    transient_for=self,
-                    flags=0,
-                    message_type=Gtk.MessageType.QUESTION,
-                    buttons=Gtk.ButtonsType.OK,
-                    text="Нельзя удалять эту команду",)
-                
-                dialog.run()              
-                dialog.destroy()
+                    self.populate_list()                
+            else:                
+                messagebox.showinfo("Сообщение", "Нельзя удалять эту команду")
             
-    def populate_list(self):
-        children=self.listbox.get_children()
-        for child in children:
-            self.listbox.remove(child)
-        
+    def populate_list(self):        
         cc=CommandController()
         commands=cc.list()
+        self.commandids=[]
         for command in commands:
-            self.listbox.add(ListBoxRowWithData(command.name,command.command_id))  
-        
-        self.listbox.show_all()      
-        
-class ListBoxRowWithData(Gtk.ListBoxRow):
-
-    def __init__(self, name,command_id):
-        super().__init__()
-        self.command_id = command_id
-        self.add(Gtk.Label(label=name, xalign=0))
+            self.listbox.insert(tk.END,command.name)  
+            self.commandids.append(command.command_id)  
                 
