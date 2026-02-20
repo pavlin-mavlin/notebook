@@ -100,7 +100,7 @@ class EditorUrl(EditorInterface):
         self.url_id=None    
         if node_id!=-1:
             uc=UrlController()
-            db_url=uc.get(node_id)
+            db_url=uc.get_by_node_id(node_id)
             self.node_id=node_id
             
             if db_url:
