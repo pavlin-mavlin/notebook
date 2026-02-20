@@ -9,3 +9,6 @@ class EditorInterface(tk.Frame):
     
     def save_data(self):
         pass    
+
+    def restore_image(self,button):
+        button.config(image=self.image_copy)

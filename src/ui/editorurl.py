@@ -158,6 +158,8 @@ class EditorUrl(EditorInterface):
         self.clipboard_clear()
         self.clipboard_append(self.username_text.get())        
         self.button_username_copy.config(image=self.okimage)
+        self.update_idletasks()
+        self.after(3000, self.restore_image(self.button_username_copy))
         
     def on_password_copy(self):        
         self.clipboard_clear()
@@ -169,6 +171,8 @@ class EditorUrl(EditorInterface):
             self.clipboard_append(self.password_text.get())     
 
         self.button_password_copy.config(image=self.okimage)
+        self.update_idletasks()
+        self.after(3000, self.restore_image(self.button_password_copy))        
 
     def on_password_show(self):
         if self.entry_password.cget("show")=="•":
@@ -180,6 +184,8 @@ class EditorUrl(EditorInterface):
         self.clipboard_clear()
         self.clipboard_append(self.url_text.get())
         self.button_url_copy.config(image=self.okimage)
+        self.update_idletasks()
+        self.after(3000, self.restore_image(self.button_url_copy))           
 
     def character_limit(self,max_length,entry_text):
         if len(entry_text.get()) > max_length:
