@@ -143,7 +143,7 @@ class EditorUrl(EditorInterface):
         url=self.url_text.get()
                          
         if i!=-1 and url:
-            command_id=self.commandids.index(i)
+            command_id=self.commandids[i]
             cc=CommandController()
             command=cc.get(command_id)
             if command.command:
