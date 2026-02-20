@@ -23,8 +23,8 @@ class App(tk.Tk):
         menu.add_cascade(label='Файл', menu=item)
         self['menu'] = menu
         
-        photo = tk.PhotoImage(file = 'images/1f4d4.png')
-        self.wm_iconphoto(False, photo)
+        icon = tk.PhotoImage(file = 'images/1f4d4.png')
+        self.wm_iconphoto(True, icon)
 
         parser = argparse.ArgumentParser()
         parser.add_argument("-d", "--database", help="set database path")
@@ -76,8 +76,7 @@ class App(tk.Tk):
         self.quit()
     
     def on_commands(self):
-        dialog=CommandsDialog(self)
-        dialog.mainloop()                
+        CommandsDialog(self,'Список команд')           
     
 if __name__ == "__main__":
     app = App()
