@@ -12,7 +12,7 @@ class CommandEditDialog(simpledialog.Dialog):
         self.result=messagebox.CANCEL
         super().__init__(parent, "Создание/редактирование команды")                
     
-    def body(self, parent:tk.Frame)->tk.Misc | None:        
+    def body(self, parent):        
 
         self.main_frame = ttk.Frame(self)             
         self.label_name = ttk.Label(self.main_frame,text="Название: ",anchor=tk.E)

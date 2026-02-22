@@ -92,7 +92,7 @@ class EditorPassword(EditorInterface):
         self.clipboard_append(self.username_text.get())      
         self.button_username_copy.config(image=self.okimage)
         self.update_idletasks()
-        self.after(3000, self.restore_image(self.button_username_copy))
+        self.after(1000, self.restore_image(self.button_username_copy))
         
     def on_password_copy(self):
         self.clipboard_clear()
@@ -105,7 +105,7 @@ class EditorPassword(EditorInterface):
 
         self.button_password_copy.config(image=self.okimage)
         self.update_idletasks()
-        self.after(3000, self.restore_image(self.button_password_copy))
+        self.after(1000, self.restore_image(self.button_password_copy))
         
     def on_password_show(self):
         if self.entry_password.cget("show")=="•":
