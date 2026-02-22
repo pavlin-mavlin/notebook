@@ -1,4 +1,4 @@
-from peewee import CharField,AutoField,ForeignKeyField
+from peewee import CharField,AutoField,ForeignKeyField,TextField
 from models.node import Node
 from models.basemodel import BaseModel
 from models.command import Command
@@ -9,7 +9,7 @@ class Url(BaseModel):
     url = CharField(null=True)
     username = CharField(null=True)
     password = CharField(null=True)
-    description = CharField(null=True)
+    description = TextField(null=True)
     command_id=ForeignKeyField(Command,backref="commands",null=True)
     
     @staticmethod
