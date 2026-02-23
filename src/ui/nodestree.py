@@ -112,6 +112,7 @@ class NodesTree(ttk.Frame):
     
         # place Entry popup properly         
         text = self.tree.item(rowid, 'text')
+        self.subscriber.on_node_changed(None,None)
         self.entryPopup = EntryPopup(self.tree, rowid, text)
         self.entryPopup.place( x=0, y=y+pady, anchor=tk.W, relwidth=1)
         self.entryPopup.bind("<Destroy>",lambda event: self.on_entry_destroyed(event))   
@@ -168,7 +169,7 @@ class NodesTree(ttk.Frame):
             self.button_down.config(state=tk.DISABLED)
             self.button_cut.config(state=tk.DISABLED)
             self.button_paste.config(state=tk.DISABLED)
-            self.subscriber.on_node_changed(self.subscriber,None)
+            self.subscriber.on_node_changed(None,None)
 
     def on_item_open(self,event):
         selected_items = self.tree.selection()
@@ -224,9 +225,10 @@ class NodesTree(ttk.Frame):
         result = messagebox.askyesno("Подтверждение", "Вы уверены, что хотите удалить этот элемент?",icon=tk.messagebox.QUESTION)
         if result==tk.YES:
             selected_items = self.tree.selection()
-            if selected_items:
+            if selected_items:                
                 node_id = selected_items[0]
                 self.tree.delete(node_id)
+                self.subscriber.on_node_changed(None,None)
                 NodeController().delete(node_id) 
 
     def on_item_up(self):

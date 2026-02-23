@@ -52,7 +52,7 @@ class EditorPanel(ttk.Frame):
                         
     def on_node_edited(self,node_id: int,node_type: int):        
         if self.editor:
-            self.on_save(self)
+            self.on_save()
             
         self.node_id=node_id
         self.node_type=node_type

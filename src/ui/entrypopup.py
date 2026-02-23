@@ -19,10 +19,16 @@ class EntryPopup(tk.Entry):
         self.bind("<Return>", self.on_return)
         self.bind("<Control-a>", self.select_all)
         self.bind("<Escape>", lambda *ignore: self.destroy())
-
+        self.bind("<FocusOut>", self.on_return)
+        
     def on_return(self, event):
         self.result=True
-        self.tv.item(self.iid, text=self.get())
+        
+        if not self.get():
+            self.tv.item(self.iid, text="Без имени")
+        else:
+            self.tv.item(self.iid, text=self.get())
+            
         self.destroy()
 
     def select_all(self, *ignore):
@@ -31,4 +37,4 @@ class EntryPopup(tk.Entry):
 
         # returns 'break' to interrupt default key-bindings
         return 'break'
-    
+

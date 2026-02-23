@@ -24,8 +24,7 @@ class NodeController(object):
             node.save()        
 
     def get(self,node_id):
-        node=Node.select().where(Node.node_id==node_id).get()
-        return node
+        return Node.get_by_id(node_id)
     
     def get_root(self):
         root_node=Node.select().where(Node.parent_id >> None).get()
@@ -35,15 +34,18 @@ class NodeController(object):
         return  Node.select()
         
     def delete(self,node_id):
-        Node.delete_by_id(node_id)
+        #Node.delete_by_id(node_id)
+        db_node=Node.get_by_id(node_id)
+        if db_node:
+            db_node.delete_instance(recursive=True)
             
     def save_expanded(self,node_id):
-        node=self.get(node_id)
+        node=Node.get_by_id(node_id)
         node.expanded=True
         node.save()
             
     def save_collapsed(self,node_id):
-        node=self.get(node_id)
+        node=Node.get_by_id(node_id)
         node.expanded=False
         node.save()         
         
@@ -52,8 +54,8 @@ class NodeController(object):
         return results
     
     def swap_weights(self,node_id1,node_id2):
-        node1=self.get(node_id1)
-        node2=self.get(node_id2)
+        node1=Node.get_by_id(node_id1)
+        node2=Node.get_by_id(node_id2)
         weight1=node1.weight
         weight2=node2.weight
         node1.weight=weight2
@@ -66,7 +68,7 @@ class NodeController(object):
         if not max_weight:
             max_weight=0
         
-        node=self.get(node_id)
+        node=Node.get_by_id(node_id)
         node.parent=new_parent_id
         node.weight=max_weight+1
         node.save()
