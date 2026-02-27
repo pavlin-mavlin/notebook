@@ -58,12 +58,12 @@ class EditorPanel(ttk.Frame):
         self.node_type=node_type
         
         if not self.editor:
-            self.editor=self.editors[self.node_type](self)  
+            self.editor=self.editors[self.node_type](self)
             if self.editor:
                 self.button_save.config(state=tk.NORMAL)
                 self.button_revert.config(state=tk.NORMAL)
                 self.editor.load_data(self.node_id)
-                       
+                self.editor.pack(side=tk.TOP, fill=tk.BOTH,expand=1)        
     
     def on_save(self):
         if self.editor and self.node_id:

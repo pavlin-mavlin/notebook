@@ -95,6 +95,7 @@ class EditorUrl(EditorInterface):
         self.text_frame.grid_columnconfigure(0, weight=1)
         self.text_frame.grid_rowconfigure(0, weight=1)
         self.text_frame.pack(side=tk.TOP, fill=tk.BOTH,expand=1)
+        
 
     def load_data(self, node_id: int):
         self.url_id=None    

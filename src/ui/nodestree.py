@@ -69,7 +69,8 @@ class NodesTree(ttk.Frame):
         
         self.tree_frame.pack(side=tk.TOP, fill=tk.BOTH, expand = True)
         #https://stackoverflow.com/questions/18562123/how-to-make-ttk-treeviews-rows-editable     
-        self.tree.bind("<Double-1>", lambda event: self.on_item_doubleclick(event))   
+        self.tree.bind('<Double-1>', lambda event: self.on_item_doubleclick(event))
+        self.tree.bind('<Button-3>', lambda event: self.on_item_doubleclick(event))
         self.tree.bind('<<TreeviewSelect>>', lambda event: self.on_item_selected(event))
         self.tree.bind('<<TreeviewOpen>>', lambda event: self.on_item_open(event))
         self.tree.bind('<<TreeviewClose>>', lambda event: self.on_item_close(event))
@@ -91,7 +92,8 @@ class NodesTree(ttk.Frame):
             self.tree.insert(parent_id,tk.END,db_node.node_id,image=self.node_images[db_node.type],text=db_node.name, open=db_node.expanded,values={db_node.type})            
             self.populate_tree_branch(nc, db_nodes, db_node.node_id)        
 
-    def on_item_doubleclick(self, event):    
+    def on_item_doubleclick(self, event):
+        #на старых версиях tkinter все эти события идут в select
         try:  # in case there was no previous popup
             self.entryPopup.destroy()
         except AttributeError:
@@ -304,5 +306,4 @@ class NodesTree(ttk.Frame):
                     child_id=self.tree.insert(parent_id,tk.END,db_node.node_id,image=node_image,text=node_text, open=True,values={node_type})
                     self.tree.selection_set(child_id)
                 
-        
                 self.subscriber.on_node_edited(node_id=db_node.node_id,node_type=db_node.type)
