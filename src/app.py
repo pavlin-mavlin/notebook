@@ -76,7 +76,7 @@ class App(tk.Tk):
         self.quit()
     
     def on_commands(self):
-        CommandsDialog(self,'Список команд')           
+        CommandsDialog(self)           
     
 if __name__ == "__main__":
     app = App()

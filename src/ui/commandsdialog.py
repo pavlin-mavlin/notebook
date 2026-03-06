@@ -9,6 +9,10 @@ from tkinter import messagebox
 
 class CommandsDialog(simpledialog.Dialog):
 
+    def __init__(self, parent): 
+        self.top_parent=parent
+        super().__init__(parent, 'Список команд')     
+
     def body(self, parent):
         self.main_frame= ttk.Frame(self) 
            
@@ -94,9 +98,9 @@ class CommandsDialog(simpledialog.Dialog):
 
         box.pack()
 
-    def wm_deiconify(self)->None:                
+    def deiconify(self)->None:                
         w=self
-        parent=self.nametowidget(self.winfo_parent())
+        parent=self.top_parent
         
         minwidth = w.winfo_reqwidth()
         minheight = w.winfo_reqheight()

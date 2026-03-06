@@ -10,9 +10,10 @@ class CommandEditDialog(simpledialog.Dialog):
     def __init__(self, parent,command_id=None): 
         self.command_id=command_id
         self.result=messagebox.CANCEL
+        self.top_parent=parent
         super().__init__(parent, "Создание/редактирование команды")                
     
-    def body(self, parent):        
+    def body(self, parent):
 
         self.main_frame = ttk.Frame(self)             
         self.label_name = ttk.Label(self.main_frame,text="Название: ",anchor=tk.E)
@@ -51,13 +52,10 @@ class CommandEditDialog(simpledialog.Dialog):
             
     def apply(self)->None:
         self.result=messagebox.OK
-        
-    def deiconify(self)->None:
-        super().deiconify()
-        
-    def wm_deiconify(self)->None:
+                
+    def deiconify(self)->None:        
         w=self
-        parent=self.nametowidget(self.winfo_parent())
+        parent=self.top_parent
         
         minwidth = w.winfo_reqwidth()
         minheight = w.winfo_reqheight()
