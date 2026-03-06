@@ -51,3 +51,13 @@ class CommandEditDialog(simpledialog.Dialog):
             
     def apply(self)->None:
         self.result=messagebox.OK
+        
+    def deiconify(self)->None:
+        super().deiconify()
+        
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width - self.winfo_reqwidth()) // 2
+        y = (screen_height - self.winfo_reqheight()) // 2
+        
+        self.geometry(f"+{x}+{y}")
