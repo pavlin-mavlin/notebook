@@ -11,7 +11,7 @@ class NodesTree(ttk.Frame):
         super().__init__(*args, **kwargs)
         
         self.cut_item_id=None        
-        
+         
         toolbar = ttk.Frame(self, borderwidth = 1, relief=tk.RAISED)    
             
         self.image_folder_add = tk.PhotoImage(file="images/folder-add.png") # self нужно, хотя не используется        
@@ -70,11 +70,13 @@ class NodesTree(ttk.Frame):
         self.tree_frame.pack(side=tk.TOP, fill=tk.BOTH, expand = True)
         #https://stackoverflow.com/questions/18562123/how-to-make-ttk-treeviews-rows-editable     
         self.tree.bind('<Double-1>', lambda event: self.on_item_doubleclick(event))
-        self.tree.bind('<Button-3>', lambda event: self.on_item_doubleclick(event))
+        self.tree.bind('<Button-3>', lambda event: self.on_context_menu(event))
         self.tree.bind('<<TreeviewSelect>>', lambda event: self.on_item_selected(event))
         self.tree.bind('<<TreeviewOpen>>', lambda event: self.on_item_open(event))
         self.tree.bind('<<TreeviewClose>>', lambda event: self.on_item_close(event))
         self.populate_tree()
+        
+      
 
     def populate_tree(self):
         
@@ -103,7 +105,7 @@ class NodesTree(ttk.Frame):
         rowid = self.tree.identify_row(event.y)
         column = self.tree.identify_column(event.x)
 
-        self.showPopup(rowid, column)
+        self.showPopup(rowid, column)                    
         
     def showPopup(self,rowid,column, is_new=False):
         # get column position info
@@ -192,8 +194,8 @@ class NodesTree(ttk.Frame):
 
     def create_node(self,node_text,node_type : NodeType): 
         selected_items = self.tree.selection()
-        if selected_items:
-            parent_id = selected_items[0]                
+        if selected_items:            
+            parent_id = selected_items[0]                                
             parent_data=self.tree.item(parent_id)
             parent_type=parent_data['values'][0]
             
@@ -207,9 +209,11 @@ class NodesTree(ttk.Frame):
             self.tree.item(parent_id, open=True)
             self.tree.update_idletasks() #это важно
             self.tree.see(child_id)
-            self.tree.selection_set(child_id)
+            self.tree.selection_set(child_id)            
             
             self.showPopup(child_id, "#0",True)
+            
+            self.selected_id=None  
 
     def on_folder_add(self):
         self.create_node("Папка",NodeType.FOLDER)        
@@ -307,3 +311,59 @@ class NodesTree(ttk.Frame):
                     self.tree.selection_set(child_id)
                 
                 self.subscriber.on_node_edited(node_id=db_node.node_id,node_type=db_node.type)
+
+    def on_context_menu(self,event):
+        item_id = self.tree.identify_row(event.y) 
+        self.tree.selection_set(item_id)
+        if item_id:           
+            item_data=self.tree.item(item_id)
+            node_type=item_data['values'][0]
+             
+            self.context_menu = tk.Menu(self, tearoff=0)
+            self.context_menu.add_command(label="Переименовать", command=self.on_item_edit)        
+            
+            self.context_menu.add_command(label="Добавить папку", command=self.on_folder_add)  
+            self.context_menu.add_command(label="Добавить заметку", command=self.on_memo_add)
+            self.context_menu.add_command(label="Добавить пароль", command=self.on_password_add)
+            self.context_menu.add_command(label="Добавить ссылку", command=self.on_url_add)   
+            
+            if node_type==NodeType.FOLDER.value:
+                parent_iid=self.tree.parent(item_id)
+                if not parent_iid=="":
+                    self.context_menu.add_command(label="Вырезать", command=self.on_cut)
+            
+                if self.cut_item_id is not None:
+                    self.context_menu.add_command(label="Вставить", command=self.on_paste)
+            
+                #если папка не root и пустая - можно удалять
+                children=self.tree.get_children(item_id)                            
+                if not parent_iid=="" and not children:
+                    self.context_menu.add_command(label="Удалить", command=self.on_delete)                
+            
+            if node_type==NodeType.MEMO.value:
+                self.context_menu.add_command(label="Вырезать", command=self.on_cut)
+                self.context_menu.add_command(label="Удалить", command=self.on_delete)  
+            
+            if node_type==NodeType.PASSWORD.value:
+                self.context_menu.add_command(label="Вырезать", command=self.on_cut)
+                self.context_menu.add_command(label="Удалить", command=self.on_delete)  
+            
+            if node_type==NodeType.URL.value:
+                self.context_menu.add_command(label="Вырезать", command=self.on_cut)
+                self.context_menu.add_command(label="Удалить", command=self.on_delete)  
+            
+            next_iid=self.tree.next(item_id)
+            prev_iid=self.tree.prev(item_id)
+            if not prev_iid=="":
+                self.context_menu.add_command(label="Выше", command=self.on_item_up) 
+            
+            if not next_iid=="":
+                self.context_menu.add_command(label="Ниже", command=self.on_item_down)
+                                          
+            self.context_menu.tk_popup(event.x_root, event.y_root,0)
+
+                
+    def on_item_edit(self):
+        selected_items = self.tree.selection()
+        if selected_items:
+            self.showPopup(selected_items[0], "#0")             

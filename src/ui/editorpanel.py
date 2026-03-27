@@ -57,7 +57,7 @@ class EditorPanel(ttk.Frame):
         self.node_id=node_id
         self.node_type=node_type
         
-        if not self.editor:
+        if not self.editor and self.editors.get(self.node_type,None):
             self.editor=self.editors[self.node_type](self)
             if self.editor:
                 self.button_save.config(state=tk.NORMAL)
