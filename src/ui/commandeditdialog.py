@@ -10,7 +10,6 @@ class CommandEditDialog(simpledialog.Dialog):
     def __init__(self, parent,command_id=None): 
         self.command_id=command_id
         self.result=messagebox.CANCEL
-        self.top_parent=parent
         super().__init__(parent, "Создание/редактирование команды")                
     
     def body(self, parent):
@@ -53,31 +52,12 @@ class CommandEditDialog(simpledialog.Dialog):
     def apply(self)->None:
         self.result=messagebox.OK
                 
-    def deiconify(self)->None:        
-        w=self
-        parent=self.top_parent
-        
-        minwidth = w.winfo_reqwidth()
-        minheight = w.winfo_reqheight()
-        maxwidth = w.winfo_vrootwidth()
-        maxheight = w.winfo_vrootheight()
-        if parent is not None and parent.winfo_ismapped():
-            x = parent.winfo_rootx() + (parent.winfo_width() - minwidth) // 2
-            y = parent.winfo_rooty() + (parent.winfo_height() - minheight) // 2
-            vrootx = w.winfo_vrootx()
-            vrooty = w.winfo_vrooty()
-            x = min(x, vrootx + maxwidth - minwidth)
-            x = max(x, vrootx)
-            y = min(y, vrooty + maxheight - minheight)
-            y = max(y, vrooty)
-            if w._windowingsystem == 'aqua':
-                # Avoid the native menu bar which sits on top of everything.
-                y = max(y, 22)
-        else:
-            x = (w.winfo_screenwidth() - minwidth) // 2
-            y = (w.winfo_screenheight() - minheight) // 2
-    
-        w.wm_maxsize(maxwidth, maxheight)
-        w.wm_geometry('+%d+%d' % (x, y))
-        
+    def deiconify(self)->None:
         super().deiconify()
+        
+        self.update_idletasks()
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width - self.winfo_reqwidth()) // 2
+        y = (screen_height - self.winfo_reqheight()) // 2        
+        self.geometry(f"+{x}+{y}")
