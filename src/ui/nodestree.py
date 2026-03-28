@@ -360,7 +360,7 @@ class NodesTree(ttk.Frame):
             if not next_iid=="":
                 self.context_menu.add_command(label="Ниже", command=self.on_item_down)
                                           
-            self.context_menu.tk_popup(event.x_root, event.y_root,0)
+            self.context_menu.post(event.x_root, event.y_root)
 
                 
     def on_item_edit(self):
