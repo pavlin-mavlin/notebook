@@ -90,6 +90,7 @@ class EditorUrl(EditorInterface):
         self.text_frame = tk.Frame(self)        
         self.textview=tk.Text(self.text_frame)
         vsb = ttk.Scrollbar(self.text_frame, orient="vertical", command=self.textview.yview)
+        self.textview.config(yscrollcommand = vsb.set)
         self.textview.grid(row=0, column=0, sticky='nsew')
         vsb.grid(row=0, column=1, sticky='ns')
         self.text_frame.grid_columnconfigure(0, weight=1)
