@@ -131,10 +131,8 @@ class EditorUrl(EditorInterface):
         i=self.combo_command.current()
         db_url.command_id=self.commandids[i]
         
-        db_url.username=self.username_text.get()
-        
-        if not self.entry_password.cget("show")=="•":
-            db_url.password=self.password_text.get()
+        db_url.username=self.username_text.get()        
+        db_url.password=self.password_text.get()
             
         db_url.description=self.textview.get("1.0",tk.END)
         uc.update(db_url)

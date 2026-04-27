@@ -80,9 +80,7 @@ class EditorPassword(EditorInterface):
             db_password.node_id=self.node_id
         
         db_password.username=self.username_text.get()
-        
-        if not self.entry_password.cget("show")=="•":
-            db_password.password=self.password_text.get()
+        db_password.password=self.password_text.get()
             
         db_password.description=self.textview.get("1.0",tk.END)
         pc.update(db_password)
