@@ -132,7 +132,7 @@ class EditorUrl(EditorInterface):
         
         db_url.username=self.username_text.get()
         
-        if self.entry_password.cget("show")=="•":
+        if not self.entry_password.cget("show")=="•":
             db_url.password=self.password_text.get()
             
         db_url.description=self.textview.get("1.0",tk.END)
