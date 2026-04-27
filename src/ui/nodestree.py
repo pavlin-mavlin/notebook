@@ -62,6 +62,7 @@ class NodesTree(ttk.Frame):
         self.tree_frame = ttk.Frame(self)        
         self.tree=ttk.Treeview(self.tree_frame,show="tree")
         vsb = ttk.Scrollbar(self.tree_frame, orient="vertical", command=self.tree.yview)
+        self.tree.config(yscrollcommand = vsb.set)
         self.tree.grid(row=0, column=0, sticky='nsew')
         vsb.grid(row=0, column=1, sticky='ns')
         self.tree_frame.grid_columnconfigure(0, weight=1)
