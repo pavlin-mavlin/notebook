@@ -35,15 +35,16 @@ class EditorMemo(EditorInterface):
                 self.memo_id=db_memo.memo_id
     
     def save_data(self):
-        mc=MemoController()
-         
-        if self.memo_id:
-            db_memo=mc.get(self.memo_id)
-        else:
-            db_memo=Memo()
-            db_memo.node_id=self.node_id
-                
-        db_memo.memo=self.textview.get("1.0",tk.END)
-        mc.update(db_memo)
-        self.memo_id=db_memo.memo_id
+        if self.textview.edit_modified:
+            mc=MemoController()
+             
+            if self.memo_id:
+                db_memo=mc.get(self.memo_id)
+            else:
+                db_memo=Memo()
+                db_memo.node_id=self.node_id
+                    
+            db_memo.memo=self.textview.get("1.0",tk.END)
+            mc.update(db_memo)
+            self.memo_id=db_memo.memo_id
                 

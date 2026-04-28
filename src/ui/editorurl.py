@@ -100,6 +100,7 @@ class EditorUrl(EditorInterface):
 
     def load_data(self, node_id: int):
         self.url_id=None    
+        self.data_changed=False
         if node_id!=-1:
             uc=UrlController()
             db_url=uc.get_by_node_id(node_id)
@@ -118,25 +119,29 @@ class EditorUrl(EditorInterface):
                 self.url_id=db_url.url_id
     
     def save_data(self):
-        uc=UrlController()
-         
-        if self.url_id:
-            db_url=uc.get(self.url_id)
-        else:
-            db_url=Url()
-            db_url.node_id=self.node_id
+        if self.textview.edit_modified:
+            self.data_changed=True
         
-        db_url.url=self.url_text.get()
-
-        i=self.combo_command.current()
-        db_url.command_id=self.commandids[i]
-        
-        db_url.username=self.username_text.get()        
-        db_url.password=self.password_text.get()
+        if self.data_changed:
+            uc=UrlController()
+             
+            if self.url_id:
+                db_url=uc.get(self.url_id)
+            else:
+                db_url=Url()
+                db_url.node_id=self.node_id
             
-        db_url.description=self.textview.get("1.0",tk.END)
-        uc.update(db_url)
-        self.url_id=db_url.url_id        
+            db_url.url=self.url_text.get()
+    
+            i=self.combo_command.current()
+            db_url.command_id=self.commandids[i]
+            
+            db_url.username=self.username_text.get()        
+            db_url.password=self.password_text.get()
+                
+            db_url.description=self.textview.get("1.0",tk.END)
+            uc.update(db_url)
+            self.url_id=db_url.url_id        
             
     def on_url_open(self):
         i=self.combo_command.current()       
@@ -188,5 +193,6 @@ class EditorUrl(EditorInterface):
         self.after(1000, self.restore_image(self.button_url_copy))           
 
     def character_limit(self,max_length,entry_text):
+        self.data_changed=True
         if len(entry_text.get()) > max_length:
             entry_text.set(entry_text.get()[:max_length])        

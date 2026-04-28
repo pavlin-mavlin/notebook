@@ -8,7 +8,8 @@ class EditorPassword(EditorInterface):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-                        
+
+                                
         self.okimage=tk.PhotoImage(file="images/2714-green.png")
         
         self.frame_fields=ttk.Frame(self)
@@ -58,6 +59,7 @@ class EditorPassword(EditorInterface):
                 
     def load_data(self, node_id: int):
         self.password_id=None    
+        self.data_changed=False
         if node_id!=-1:
             pc=PasswordController()
             db_password=pc.get_by_node_id(node_id)
@@ -71,20 +73,24 @@ class EditorPassword(EditorInterface):
                 self.password_id=db_password.password_id
     
     def save_data(self):
-        pc=PasswordController()
-         
-        if self.password_id:
-            db_password=pc.get(self.password_id)
-        else:
-            db_password=Password()
-            db_password.node_id=self.node_id
+        if self.textview.edit_modified:
+            self.data_changed=True
         
-        db_password.username=self.username_text.get()
-        db_password.password=self.password_text.get()
+        if self.data_changed:
+            pc=PasswordController()
+             
+            if self.password_id:
+                db_password=pc.get(self.password_id)
+            else:
+                db_password=Password()
+                db_password.node_id=self.node_id
             
-        db_password.description=self.textview.get("1.0",tk.END)
-        pc.update(db_password)
-        self.password_id=db_password.password_id
+            db_password.username=self.username_text.get()
+            db_password.password=self.password_text.get()
+                
+            db_password.description=self.textview.get("1.0",tk.END)
+            pc.update(db_password)
+            self.password_id=db_password.password_id
     
     def on_username_copy(self):
         self.clipboard_clear()
@@ -113,6 +119,7 @@ class EditorPassword(EditorInterface):
             self.entry_password.config(show="•")
 
     def character_limit(self,max_length,entry_text):
+        self.data_changed=True
         if len(entry_text.get()) > max_length:
             entry_text.set(entry_text.get()[:max_length])
     
